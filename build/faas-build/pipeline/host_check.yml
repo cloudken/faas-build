@@ -1,0 +1,16 @@
+---
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  gather_facts: no
+
+  vars_files:
+  - host_vars.yml
+  
+  tasks:
+  - name: ping host
+    net_ping:
+      dest: "{{dest_host}}"
+  
+
+      

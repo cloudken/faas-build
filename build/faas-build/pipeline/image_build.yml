@@ -1,0 +1,19 @@
+---
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  gather_facts: no
+
+  vars_files:
+  - build_vars.yml
+  
+  tasks:
+  - name: Build FaaS-worker container
+    docker_image:
+      path: "{{build_path}}"
+      repository: "{{registry}}"
+      name: "{{image_name}}"
+      tag: "{{image_tag}}"
+      push: yes
+      state: present
+      force: yes
