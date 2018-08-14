@@ -1,2 +1,2 @@
 # faas-api
-API-gateway for serverless
+Build faas image
