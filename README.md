@@ -1,2 +1,2 @@
-# faas-api
+# faas-build
 Build faas image

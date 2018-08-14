@@ -2,6 +2,7 @@
 import fileinput
 import logging
 import os
+import random
 import shutil
 
 from cloudframe.common.utils import execute
@@ -64,8 +65,10 @@ class Faas(object):
             package = resource['package']
             image = resource['image_name']
             tag = resource['image_tag']
+            num = random.randint(0, len(self.hosts_ok) - 1)
+            host = self.hosts_ok[num]
             self._make_package(name, package)
-            self._build_image(name, image, tag)
+            self._build_image(name, image, tag, host)
         except Exception as e:
             LOG.error('Create %(res)s failed, error info: %(err)s',
                       {'res': resource['name'], 'err': e})
@@ -95,7 +98,7 @@ class Faas(object):
         # shutil.rmtree(base_path)
         LOG.debug('Make package %(name)s end.', {'name': res_name})
 
-    def _build_image(self, res_name, image, tag):
+    def _build_image(self, res_name, image, tag, host):
         LOG.debug('Building image %(image)s:%(tag)s begin...',
                   {'image': image, 'tag': tag})
 
@@ -111,11 +114,7 @@ class Faas(object):
 
         # host
         # host_str = host + ' ansible_ssh_pass=cloud ansible_become_pass=cloud'
-        host_par = ''
-        for host in self.hosts_ok:
-            if host_ip == host['host_ip']:
-                host_par = host['host_par']
-                break
+        host_par = host['host_par']
         hosts_file = base_path + 'hosts'
         fo = open(hosts_file, 'w')
         fo.write("[nodes]\n")

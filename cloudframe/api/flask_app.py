@@ -1,7 +1,7 @@
 
 import logging
 import os
-from flask import abort, Flask, flash, jsonify, make_response, request
+from flask import abort, Flask, jsonify, make_response, request
 from six.moves import http_client
 from werkzeug.contrib.fixers import ProxyFix
 from werkzeug.utils import secure_filename
