@@ -25,7 +25,7 @@ COPY supervisord.conf /etc/supervisord.conf
 RUN mkdir -p /var/log/cloudframe
 RUN rm -rf /root/temp
 RUN mkdir -p /root/faas
-COPY deploy /root/faas/deploy
+COPY pipeline /root/faas/pipeline
 COPY ansible.cfg /root/.ansible.cfg
 WORKDIR /
 ENTRYPOINT ["/usr/bin/supervisord"]

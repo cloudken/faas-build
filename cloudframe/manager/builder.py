@@ -22,10 +22,11 @@ DEFAULT_HOST_GLOBAL = {
 MAX_INS = 20
 
 HOST_CONFIG = '/root/faas/config/docker_host.conf'
-FAAS_CONFIG_PATH = '/root/faas/config/worker_config'
 
 RES_STATUS_DONE = 'done'
 RES_STATUS_INIT = 'initializing'
+RES_STATUS_DOING = 'doing'
+RES_STATUS_ERROR = 'error'
 
 
 class FaaSBuilder(object):
@@ -58,14 +59,23 @@ class FaaSBuilder(object):
         faas_pkg = info['faas_pkg']
         LOG.debug('Pipeline for %(res)s begin...', {'res': res_name})
         resource = {
-            'name': 'res_name',
+            'name': res_name,
             'package': faas_pkg,
             'created_at': datetime.now(),
             'status': RES_STATUS_INIT
         }
         self.pipelines[res_name] = resource
-        get_faas_buildinfo(faas_desc, resource)
-        self.driver.create(resource)
-        resource['status'] = RES_STATUS_DONE
-        resource['finished_at'] = datetime.now()
-        LOG.debug('Pipeline for %(res)s end.', {'res': res_name})
+        try:
+            get_faas_buildinfo(faas_desc, resource)
+            resource['status'] = RES_STATUS_DOING
+            LOG.debug('Get description end, %(res)s', {'res': resource})
+            self.driver.create(resource)
+            resource['status'] = RES_STATUS_DONE
+            resource['finished_at'] = datetime.now()
+            LOG.debug('Pipeline for %(res_name)s end.', {'res_name': res_name})
+            LOG.debug('Resource info: %(res)s', {'res': resource})
+        except Exception as e:
+            resource['status'] = RES_STATUS_ERROR
+            resource['finished_at'] = datetime.now()
+            LOG.error('Pipeline for %(res_name)s failed, error info: %(err)s',
+                      {'res_name': res_name, 'err': e})

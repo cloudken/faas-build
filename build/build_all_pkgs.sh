@@ -8,4 +8,4 @@ fi
 src_path=$1
 build_path=`pwd`
 
-./build_pkg.sh faas-api $src_path $build_path faas-api
+./build_pkg.sh faas-build $src_path $build_path faas-build

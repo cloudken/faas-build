@@ -34,7 +34,8 @@ class Faas(object):
         LOG.debug('Chcke host %(host)s begin...', {'host': host['host_ip']})
 
         # host
-        host_par = '127.0.0.1'
+        # host_par = '127.0.0.1'
+        host_par = host['host_par']
         base_path = '/root/faas/pipeline/'
         hosts_file = base_path + 'hosts'
         fo = open(hosts_file, 'w')
@@ -72,6 +73,7 @@ class Faas(object):
         except Exception as e:
             LOG.error('Create %(res)s failed, error info: %(err)s',
                       {'res': resource['name'], 'err': e})
+            raise e
 
     def _make_package(self, res_name, package):
         LOG.debug('Make package %(name)s begin...', {'name': res_name})
@@ -87,6 +89,11 @@ class Faas(object):
         shutil.copy(base_package, base_path)
         shutil.copy(package, base_path)
         run_sh = src_path + 'make_package.sh'
+        shutil.copy(run_sh, base_path)
+        run_sh = base_path + 'make_package.sh'
+        dockerfile_src_path = src_path + 'faas-worker'
+        dockerfile_dst_path = base_path + 'faas-worker'
+        shutil.copytree(dockerfile_src_path, dockerfile_dst_path)
 
         # make package
         cur_dir = os.getcwd()
@@ -123,7 +130,7 @@ class Faas(object):
         fo.close()
 
         # vars
-        build_path = base_path + 'cloudframe/build/faas-worker'
+        build_path = base_path + 'faas-worker/'
         vars_file = base_path + 'build_vars.yml'
         for line in fileinput.input(vars_file, inplace=1):
             line = line.strip()

@@ -8,12 +8,19 @@
   - build_vars.yml
   
   tasks:
+  - name: Copy dockerfile
+    copy:
+      src: "{{build_path}}"
+      dest: "{{build_path}}"
+      owner: root
+      group: root
+
   - name: Build FaaS-worker container
     docker_image:
       path: "{{build_path}}"
-      repository: "{{registry}}"
-      name: "{{image_name}}"
+      name: "{{registry}}/{{image_name}}"
       tag: "{{image_tag}}"
+      pull: no
       push: yes
       state: present
       force: yes

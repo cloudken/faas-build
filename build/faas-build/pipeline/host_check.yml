@@ -9,8 +9,4 @@
   
   tasks:
   - name: ping host
-    net_ping:
-      dest: "{{dest_host}}"
-  
-
-      
+    ping:

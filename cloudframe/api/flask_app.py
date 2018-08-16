@@ -11,7 +11,7 @@ from cloudframe.common import exception
 from cloudframe.common.job import Tasks
 
 UPLOAD_FOLDER = '/root/faas/uploads/'
-ALLOWED_EXTENSIONS = set(['tar.gz', 'yaml'])
+ALLOWED_EXTENSIONS = set(['gz', 'yaml'])
 
 os.environ.setdefault('LOG_LEVEL', 'DEBUG')
 loglevel_map = {
@@ -25,7 +25,7 @@ logging.basicConfig(
     format='%(asctime)s.%(msecs)03d %(filename)s[line:%(lineno)d]'
            ' %(levelname)s %(message)s',
     datefmt='%a, %d %b %Y %H:%M:%S',
-    filename='/var/log/cloudframe/faas-api.log',
+    filename='/var/log/cloudframe/faas-build.log',
     filemode='a')
 LOG = logging.getLogger(__name__)
 
@@ -42,41 +42,49 @@ def allowed_file(filename):
 
 @app.route('/faas_build/<ver>/<res_name>', methods=['POST'])
 def upload_package(ver, res_name):
-    if 'faas-package' not in request.files or 'faas-desc' not in request.files:
-        LOG.error('No upload FaaS package.')
-        abort(http_client.BAD_REQUEST)
+    try:
+        if 'faas-package' not in request.files or 'faas-desc' not in request.files:
+            LOG.error('No upload FaaS package.')
+            abort(http_client.BAD_REQUEST)
 
-    faas_pkg = request.files['faas-package']
-    faas_desc = request.files['faas-desc']
-    if faas_pkg.filename == '' or faas_desc.filename == '':
-        LOG.error('No upload FaaS package.')
-        abort(http_client.BAD_REQUEST)
+        faas_pkg = request.files['faas-package']
+        faas_desc = request.files['faas-desc']
+        if faas_pkg.filename == '' or faas_desc.filename == '':
+            LOG.error('No upload FaaS package.')
+            abort(http_client.BAD_REQUEST)
+        LOG.debug('Receiving package %(package)s, desc %(desc)s',
+                  {'package': faas_pkg.filename, 'desc': faas_desc.filename})
 
-    if faas_pkg and allowed_file(faas_pkg.filename):
-        filename = secure_filename(faas_pkg.filename)
         path = app.config['UPLOAD_FOLDER'] + res_name
-        faas_pkg.save(os.path.join(path, filename))
-    else:
-        LOG.error('FaaS package is invalid.')
-        abort(http_client.BAD_REQUEST)
-    if faas_desc and allowed_file(faas_desc.filename):
-        filename = secure_filename(faas_desc.filename)
-        path = app.config['UPLOAD_FOLDER'] + res_name
-        faas_desc.save(os.path.join(path, filename))
-    else:
-        LOG.error('FaaS desc is invalid.')
-        abort(http_client.BAD_REQUEST)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        if faas_pkg and allowed_file(faas_pkg.filename):
+            filename = secure_filename(faas_pkg.filename)
+            faas_pkg.save(os.path.join(path, filename))
+        else:
+            LOG.error('FaaS package is invalid.')
+            abort(http_client.BAD_REQUEST)
+        if faas_desc and allowed_file(faas_desc.filename):
+            filename = secure_filename(faas_desc.filename)
+            faas_desc.save(os.path.join(path, filename))
+        else:
+            LOG.error('FaaS desc is invalid.')
+            abort(http_client.BAD_REQUEST)
 
-    desc_file = app.config['UPLOAD_FOLDER'] + res_name + '/' + faas_desc
-    pkg_file = app.config['UPLOAD_FOLDER'] + res_name + '/' + faas_pkg
-    info = {
-        'res_name': res_name,
-        'faas_desc': desc_file,
-        'faas_pkg': pkg_file
-    }
-    item = [Builder.create_pipeline, info]
-    Tasks.put_nowait(item)
-    return make_response(jsonify({'result': 'OK'}), http_client.OK)
+        desc_file = path + '/' + faas_desc.filename
+        pkg_file = path + '/' + faas_pkg.filename
+        info = {
+            'res_name': res_name,
+            'faas_desc': desc_file,
+            'faas_pkg': pkg_file
+        }
+        item = [Builder.create_pipeline, info]
+        Tasks.put_nowait(item)
+        return make_response(jsonify({'result': 'OK'}), http_client.OK)
+    except Exception as e:
+        LOG.error('Post Resource[%(res)s] failed, error info: %(error)s',
+                  {'res': res_name, 'error': e})
+        abort(http_client.INTERNAL_SERVER_ERROR)
 
 
 @app.route('/faas_build/<ver>/<res_name>', methods=['GET'])
