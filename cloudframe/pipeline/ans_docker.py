@@ -5,6 +5,8 @@ import os
 import random
 import shutil
 
+from cloudframe.common.config import FAAS_PIPELINE_PATH
+from cloudframe.common.config import FAAS_CONFIG_PATH
 from cloudframe.common.utils import execute
 
 LOG = logging.getLogger(__name__)
@@ -17,8 +19,11 @@ WORKER_LIFE_CYCLE = 60
 
 
 class Faas(object):
-    def __init__(self, hosts, registry_info):
+    def __init__(self, hosts, registry_info, base_package):
         self.registry = registry_info
+        self.base_package = base_package
+        src_pkg = FAAS_CONFIG_PATH + self.base_package
+        shutil.copy(src_pkg, FAAS_PIPELINE_PATH)
         self.hosts_ok = []
         self.hosts_error = []
         for host in hosts:
@@ -36,7 +41,7 @@ class Faas(object):
         # host
         # host_par = '127.0.0.1'
         host_par = host['host_par']
-        base_path = '/root/faas/pipeline/'
+        base_path = FAAS_PIPELINE_PATH
         hosts_file = base_path + 'hosts'
         fo = open(hosts_file, 'w')
         fo.write("[nodes]\n")
@@ -79,14 +84,14 @@ class Faas(object):
         LOG.debug('Make package %(name)s begin...', {'name': res_name})
 
         # mkdir and copy files
-        src_path = '/root/faas/pipeline/'
+        src_path = FAAS_PIPELINE_PATH
         base_path = src_path + res_name + '/'
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-        base_name = 'cloudframe.tar.gz'
-        base_package = src_path + base_name
+
+        base_package_file = src_path + self.base_package
         package_name = os.path.basename(package)
-        shutil.copy(base_package, base_path)
+        shutil.copy(base_package_file, base_path)
         shutil.copy(package, base_path)
         run_sh = src_path + 'make_package.sh'
         shutil.copy(run_sh, base_path)
@@ -98,7 +103,7 @@ class Faas(object):
         # make package
         cur_dir = os.getcwd()
         os.chdir(base_path)
-        execute(run_sh, base_name, package_name, check_exit_code=[0], run_as_root=True)
+        execute(run_sh, self.base_package, package_name, check_exit_code=[0], run_as_root=True)
         os.chdir(cur_dir)
 
         # remove base_path
@@ -110,7 +115,7 @@ class Faas(object):
                   {'image': image, 'tag': tag})
 
         # mkdir and copy files
-        src_path = '/root/faas/pipeline/'
+        src_path = FAAS_PIPELINE_PATH
         base_path = src_path + res_name + '/'
         if not os.path.exists(base_path):
             os.makedirs(base_path)

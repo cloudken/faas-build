@@ -9,10 +9,12 @@ from werkzeug.utils import secure_filename
 from cloudframe.manager.builder import FaaSBuilder
 from cloudframe.common import exception
 from cloudframe.common.job import Tasks
+from cloudframe.common.config import FAAS_UPLOAD_FOLDER
 
-UPLOAD_FOLDER = '/root/faas/uploads/'
+
 ALLOWED_EXTENSIONS = set(['gz', 'yaml'])
 
+os.environ.setdefault('BASE_PACKAGE', 'cloudframe.tar.gz')
 os.environ.setdefault('LOG_LEVEL', 'DEBUG')
 loglevel_map = {
     'DEBUG': logging.DEBUG,
@@ -31,8 +33,8 @@ LOG = logging.getLogger(__name__)
 
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-Builder = FaaSBuilder()
+app.config['UPLOAD_FOLDER'] = FAAS_UPLOAD_FOLDER
+Builder = FaaSBuilder(os.environ['BASE_PACKAGE'])
 
 
 def allowed_file(filename):

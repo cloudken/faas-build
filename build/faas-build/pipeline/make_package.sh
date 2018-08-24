@@ -12,7 +12,8 @@ tar xvfz $base_package
 tar xvfz $faas_package
 rm -f $base_package
 mv cloudframe* cloudframe
-cp -rf faasframe/resource cloudframe/cloudframe/
+rm -rf cloudframe/cloudframe/resource
+cp -rf faasframe*/cloudframe/resource cloudframe/cloudframe/
 cd cloudframe
 mkdir -p dist
 python setup.py sdist

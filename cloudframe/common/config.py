@@ -7,6 +7,10 @@ except Exception:
 import os
 import yaml
 
+FAAS_CONFIG_PATH = '/root/faas/config/'
+FAAS_UPLOAD_FOLDER = '/root/faas/uploads/'
+FAAS_PIPELINE_PATH = '/root/faas/pipeline/'
+
 
 class HostConfig(object):
     def __init__(self, filename):
