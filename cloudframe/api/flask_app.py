@@ -14,7 +14,9 @@ from cloudframe.common.config import FAAS_UPLOAD_FOLDER
 
 ALLOWED_EXTENSIONS = set(['gz', 'yaml'])
 
+os.environ.setdefault('HOST_CONFIG', 'docker_host.conf')
 os.environ.setdefault('BASE_PACKAGE', 'cloudframe.tar.gz')
+os.environ.setdefault('FAAS_API_SERVER', '10.63.133.170:5000')
 os.environ.setdefault('LOG_LEVEL', 'DEBUG')
 loglevel_map = {
     'DEBUG': logging.DEBUG,
@@ -34,7 +36,7 @@ LOG = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = FAAS_UPLOAD_FOLDER
-Builder = FaaSBuilder(os.environ['BASE_PACKAGE'])
+Builder = FaaSBuilder(os.environ['HOST_CONFIG'], os.environ['BASE_PACKAGE'])
 
 
 def allowed_file(filename):

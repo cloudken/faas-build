@@ -98,6 +98,8 @@ class Faas(object):
         run_sh = base_path + 'make_package.sh'
         dockerfile_src_path = src_path + 'faas-worker'
         dockerfile_dst_path = base_path + 'faas-worker'
+        if os.path.exists(dockerfile_dst_path):
+            shutil.rmtree(dockerfile_dst_path)
         shutil.copytree(dockerfile_src_path, dockerfile_dst_path)
 
         # make package

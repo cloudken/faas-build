@@ -5,7 +5,7 @@ from six.moves import http_client
 from cloudframe.common import exception
 
 
-class hrpc(object):
+class HRPC(object):
     def __init__(self, host, url, timeout=15):
         self.endpoint = host + url
         self.http = httplib2.Http(timeout=timeout)
@@ -44,6 +44,24 @@ class hrpc(object):
     def delete(self, object_id):
         url = self.endpoint + object_id
         response, content = self.http.request(url, 'DELETE')
+        if response.status == http_client.OK:
+            return json.loads(content)
+        else:
+            raise exception.HttpError(response.status)
+
+    def put(self, input_parameters, object_id=None):
+        if input_parameters is None:
+            raise exception.Invalid()
+        else:
+            body = json.dumps(input_parameters)
+            headers = {'Content-Type': 'application/json'}
+        if object_id is None:
+            url = self.endpoint
+        else:
+            url = self.endpoint + object_id
+
+        response, content = self.http.request(url, 'PUT', body=body,
+                                              headers=headers)
         if response.status == http_client.OK:
             return json.loads(content)
         else:

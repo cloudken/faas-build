@@ -8,6 +8,7 @@ from cloudframe.common import exception
 from cloudframe.common.config import HostConfig
 from cloudframe.common.config import get_faas_buildinfo
 from cloudframe.common.config import FAAS_CONFIG_PATH
+from cloudframe.common.http_rpc import HRPC
 from cloudframe.pipeline.ans_docker import Faas
 
 LOG = logging.getLogger(__name__)
@@ -67,10 +68,13 @@ class FaaSBuilder(object):
         }
         self.pipelines[res_name] = resource
         try:
-            get_faas_buildinfo(faas_desc, resource)
+            faas_input = get_faas_buildinfo(faas_desc, resource)
             resource['status'] = RES_STATUS_DOING
             LOG.debug('Get description end, %(res)s', {'res': resource})
             self.driver.create(resource)
+            host = os.environ['FAAS_API_SERVER']
+            rpc = HRPC(host, '/serverless/v1/faas')
+            rpc.put(faas_input)
             resource['status'] = RES_STATUS_DONE
             resource['finished_at'] = datetime.now()
             LOG.debug('Pipeline for %(res_name)s end.', {'res_name': res_name})

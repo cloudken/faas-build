@@ -53,3 +53,4 @@ def get_faas_buildinfo(filename, resource):
         fo.close()
         resource['image_name'] = faas_input['image_name']
         resource['image_tag'] = faas_input['image_tag']
+        return faas_input

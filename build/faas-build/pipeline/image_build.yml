@@ -15,6 +15,11 @@
       owner: root
       group: root
 
+  - name: change start.sh mode
+    file:
+      path: "{{build_path}}start.sh"
+      mode: 0777
+
   - name: Build FaaS-worker container
     docker_image:
       path: "{{build_path}}"
