@@ -1,8 +1,11 @@
 import httplib2
 import json
+import logging
 from six.moves import http_client
 
 from cloudframe.common import exception
+
+LOG = logging.getLogger(__name__)
 
 
 class HRPC(object):
@@ -17,11 +20,18 @@ class HRPC(object):
         else:
             body = json.dumps(input_parameters)
             headers = {'Content-Type': 'application/json'}
-        url = self.endpoint + object_id
-        response, content = self.http.request(url, 'POST', body=body,
-                                              headers=headers)
-        if response.status in [http_client.OK, http_client.CREATED]:
-            return json.loads(content)
+        if object_id is None:
+            url = self.endpoint
+        else:
+            url = self.endpoint + object_id
+        LOG.debug('Post: url %(url)s, body %(body)s', {'url': url, 'body': body})
+        response, content = self.http.request(url, 'POST', body=body, headers=headers)
+        LOG.debug('Post result: status %(st)s, content %(ct)s', {'st': response.status, 'ct': content})
+        if response.status in [http_client.OK, http_client.CREATED, http_client.NO_CONTENT]:
+            if response.status == http_client.NO_CONTENT:
+                return
+            else:
+                return json.loads(content)
         else:
             raise exception.HttpError(response.status)
 
@@ -44,8 +54,11 @@ class HRPC(object):
     def delete(self, object_id):
         url = self.endpoint + object_id
         response, content = self.http.request(url, 'DELETE')
-        if response.status == http_client.OK:
-            return json.loads(content)
+        if response.status in [http_client.OK, http_client.NO_CONTENT]:
+            if response.status == http_client.NO_CONTENT:
+                return
+            else:
+                return json.loads(content)
         else:
             raise exception.HttpError(response.status)
 
@@ -59,7 +72,6 @@ class HRPC(object):
             url = self.endpoint
         else:
             url = self.endpoint + object_id
-
         response, content = self.http.request(url, 'PUT', body=body,
                                               headers=headers)
         if response.status == http_client.OK:
