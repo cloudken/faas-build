@@ -95,7 +95,7 @@ def upload_package(ver, res_name):
 def get_resource(ver, res_name):
     try:
         results = Builder.get(res_name)
-        return make_response(results[1], results[0])
+        return make_response(jsonify(results[1]), results[0])
     except exception.CloudframeException as e:
         LOG.error('GET Resource[%(res)s] failed, error info: %(error)s',
                   {'res': res_name, 'error': e.message})
